@@ -6,8 +6,6 @@ then split on lines that look like a section header, carrying forward
 the bylaw name, section number, and starting page for each chunk.
 """
 
-from __future__ import annotations
-
 import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
