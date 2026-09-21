@@ -67,8 +67,8 @@ data/           generated artifacts: chunks.json, synthetic_qa.json
 
 - [x] Phase 1: project scaffolding
 - [x] Phase 2: chunking + ingestion pipeline
-- [ ] Phase 3: hybrid retrieval
-- [ ] Phase 4: synthetic eval set + CI gate
+- [x] Phase 3: hybrid retrieval
+- [x] Phase 4: synthetic eval set + CI gate
 - [ ] Phase 5: CLI
 
 ## Setup
@@ -86,6 +86,42 @@ python -m scripts.ingest
 ```
 
 This writes chunked, embedded bylaw text to `data/chunks.json`.
+
+## Eval set
+
+Generating the synthetic Q&A eval set calls the Claude API and needs an
+API key:
+
+```bash
+export ANTHROPIC_API_KEY=sk-...   # or put it in a .env file
+python -m scripts.generate_qa
+```
+
+This samples chunks (capped per bylaw so no single bylaw dominates),
+asks Claude for one question+answer grounded in each chunk's text, and
+writes the result to `data/synthetic_qa.json`. **Hand-validate a sample
+of these** before trusting the set -- a bad synthetic question will
+just make the eval noisy.
+
+Once you're happy with it, commit `data/synthetic_qa.json` (it's
+tracked in git, unlike the source PDFs) so CI can evaluate against it.
+
+Then run the eval itself:
+
+```bash
+python -m scripts.eval
+```
+
+This reports `recall@5` (did the right bylaw section show up in the
+top 5 retrieved results?) and `faithfulness` (does the top retrieved
+chunk actually support the expected answer, judged by Claude on a
+sample of questions to bound API cost) and exits non-zero if either
+falls below threshold (0.70 / 0.80 by default).
+
+`.github/workflows/eval.yml` runs the test suite and this eval on every
+push. It needs an `ANTHROPIC_API_KEY` secret set on the GitHub repo
+(Settings -> Secrets and variables -> Actions) for the faithfulness
+judge to work.
 
 ## Tests
 

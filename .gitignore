@@ -7,5 +7,9 @@ venv/
 *.egg-info/
 .DS_Store
 
+# Source PDFs are large and not ours to redistribute -- add your own to
+# data/bylaws/ and run `python -m scripts.ingest`.
 data/bylaws/*.pdf
-data/chunks.json
+
+# data/chunks.json and data/synthetic_qa.json ARE committed: CI's eval
+# job runs against them directly since it has no PDFs to re-ingest from.
