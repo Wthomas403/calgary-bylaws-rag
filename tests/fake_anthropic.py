@@ -7,6 +7,7 @@ callers rely on: a response with ``.content[0].text``.
 class FakeContentBlock:
     def __init__(self, text: str):
         self.text = text
+        self.type = "text"
 
 
 class FakeMessage:
