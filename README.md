@@ -69,7 +69,7 @@ data/           generated artifacts: chunks.json, synthetic_qa.json
 - [x] Phase 2: chunking + ingestion pipeline
 - [x] Phase 3: hybrid retrieval
 - [x] Phase 4: synthetic eval set + CI gate
-- [ ] Phase 5: CLI
+- [x] Phase 5: CLI
 
 ## Setup
 
@@ -86,6 +86,15 @@ python -m scripts.ingest
 ```
 
 This writes chunked, embedded bylaw text to `data/chunks.json`.
+
+## Searching from the command line
+
+```bash
+python -m cli.search "can I keep chickens in my backyard"
+```
+
+Prints the top 3 matching bylaw passages with their bylaw name, section,
+and page number. Use `--top-k N` for more/fewer results.
 
 ## Eval set
 
