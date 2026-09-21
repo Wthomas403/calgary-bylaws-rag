@@ -11,6 +11,7 @@ scripts/eval.py treats it as ground truth.
 
 import json
 import random
+import re
 from pathlib import Path
 
 import typer
@@ -43,13 +44,27 @@ Excerpt:
 \"\"\"
 """
 
+CODE_FENCE_PATTERN = re.compile(r"^```(?:json)?\s*|\s*```$", re.MULTILINE)
+
 app = typer.Typer()
+
+
+def strip_code_fence(text: str) -> str:
+    """Claude sometimes wraps JSON in a ```json ... ``` fence despite being
+    told not to. Strip it so json.loads() sees a bare object."""
+    return CODE_FENCE_PATTERN.sub("", text).strip()
 
 
 def sample_chunks(chunks: list[dict], n: int, max_per_bylaw: int) -> list[dict]:
     """Sample up to n chunks, capping how many come from any one bylaw
     so a handful of long bylaws don't dominate the eval set."""
-    eligible = [c for c in chunks if len(c["text"]) >= MIN_CHUNK_CHARS]
+    # section is None only for the one title/preamble chunk each bylaw PDF
+    # starts with ("OFFICE CONSOLIDATION / BYLAW NUMBER ..."); it's boilerplate,
+    # not a specific, answerable provision, so questions grounded in it tend to
+    # come out generic ("What is this bylaw about?").
+    eligible = [
+        c for c in chunks if c["section"] is not None and len(c["text"]) >= MIN_CHUNK_CHARS
+    ]
     random.shuffle(eligible)
 
     per_bylaw_count: dict[str, int] = {}
@@ -75,7 +90,7 @@ def generate_qa_pair(client: Anthropic, chunk: dict) -> dict | None:
         max_tokens=300,
         messages=[{"role": "user", "content": prompt}],
     )
-    raw = response.content[0].text.strip()
+    raw = strip_code_fence(response.content[0].text.strip())
 
     try:
         parsed = json.loads(raw)
