@@ -25,11 +25,18 @@ PDFs (data/bylaws/)
         │                combined into a single top-5 ranking
         │
         ├──► cli/search.py       `python -m cli.search "question"`
-        │                        prints top-3 results with source
-        │                        bylaw + section
+        │                        prints top-3 raw results with source
+        │                        bylaw + section (no LLM call)
         │
-        └──► FastAPI service     serves retrieval (and eventually
-             (planned)           generation) over HTTP
+        ├──► src/generator.py    feeds retrieved passages to Claude
+        │    + cli/ask.py        (claude-opus-5) to write a grounded
+        │                        natural-language answer with
+        │                        citations -- refuses to guess if the
+        │                        excerpts don't cover the question.
+        │                        `python -m cli.ask "question"`
+        │
+        └──► FastAPI service     serves retrieval/generation over HTTP
+             (planned)           (not built yet)
 ```
 
 Eval loop:
@@ -94,7 +101,22 @@ python -m cli.search "can I keep chickens in my backyard"
 ```
 
 Prints the top 3 matching bylaw passages with their bylaw name, section,
-and page number. Use `--top-k N` for more/fewer results.
+and page number. Use `--top-k N` for more/fewer results. No LLM call --
+just raw retrieval.
+
+## Asking a question
+
+```bash
+python -m cli.ask "can I keep chickens in my backyard"
+```
+
+Retrieves the top 5 passages and asks Claude (`claude-opus-5`) to write
+a plain-language answer grounded *only* in that retrieved text, citing
+the bylaw and section for each claim, and printing sources below the
+answer. If the retrieved passages don't actually cover the question, it
+says so instead of guessing -- try it on something out of scope, e.g.
+`python -m cli.ask "what is the speed limit on the highway"`. Requires
+`ANTHROPIC_API_KEY`.
 
 ## Eval set
 
