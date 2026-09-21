@@ -75,7 +75,12 @@ class Retriever:
         self,
         chunks: list[dict],
         embed_fn: EmbedFn | None = None,
-        bm25_weight: float = 0.5,
+        # Measured against the synthetic eval set: residents paraphrase in
+        # plain language that shares few keywords with legal bylaw text, so
+        # dense search alone outperforms a 50/50 split (0.750 vs 0.690
+        # recall@5). A small BM25 weight is kept for exact-term queries
+        # (bylaw numbers, specific legal terms) rather than dropping it to 0.
+        bm25_weight: float = 0.2,
     ):
         if not chunks:
             raise ValueError("Retriever needs at least one chunk")

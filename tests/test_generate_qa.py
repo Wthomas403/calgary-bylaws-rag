@@ -1,4 +1,4 @@
-from scripts.generate_qa import generate_qa_pair, sample_chunks
+from scripts.generate_qa import generate_qa_pair, sample_chunks, strip_code_fence
 from tests.fake_anthropic import FakeAnthropicClient
 
 CHUNKS = [
@@ -16,6 +16,12 @@ def test_sample_chunks_skips_short_chunks():
     assert "c" not in {c["bylaw_name"] for c in selected}
 
 
+def test_sample_chunks_skips_sectionless_preamble_chunks():
+    chunks = CHUNKS + [{"bylaw_name": "d", "section": None, "page": 1, "text": "x" * 200}]
+    selected = sample_chunks(chunks, n=10, max_per_bylaw=10)
+    assert "d" not in {c["bylaw_name"] for c in selected}
+
+
 def test_sample_chunks_caps_per_bylaw():
     selected = sample_chunks(CHUNKS, n=10, max_per_bylaw=1)
     counts = {}
@@ -27,6 +33,27 @@ def test_sample_chunks_caps_per_bylaw():
 def test_sample_chunks_respects_n():
     selected = sample_chunks(CHUNKS, n=2, max_per_bylaw=10)
     assert len(selected) == 2
+
+
+def test_strip_code_fence_removes_json_fence():
+    fenced = '```json\n{"question": "q", "answer": "a"}\n```'
+    assert strip_code_fence(fenced) == '{"question": "q", "answer": "a"}'
+
+
+def test_strip_code_fence_removes_bare_fence():
+    fenced = '```\n{"question": "q", "answer": "a"}\n```'
+    assert strip_code_fence(fenced) == '{"question": "q", "answer": "a"}'
+
+
+def test_strip_code_fence_leaves_unfenced_json_alone():
+    raw = '{"question": "q", "answer": "a"}'
+    assert strip_code_fence(raw) == raw
+
+
+def test_generate_qa_pair_parses_fenced_response():
+    client = FakeAnthropicClient(['```json\n{"question": "Can I do X?", "answer": "No."}\n```'])
+    pair = generate_qa_pair(client, CHUNKS[0])
+    assert pair["question"] == "Can I do X?"
 
 
 def test_generate_qa_pair_parses_valid_response():
