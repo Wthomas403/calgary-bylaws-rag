@@ -63,13 +63,6 @@ data/bylaws/    source bylaw PDFs (not committed; add your own)
 data/           generated artifacts: chunks.json, synthetic_qa.json
 ```
 
-## Status
-
-- [x] Phase 1: project scaffolding
-- [x] Phase 2: chunking + ingestion pipeline
-- [x] Phase 3: hybrid retrieval
-- [x] Phase 4: synthetic eval set + CI gate
-- [x] Phase 5: CLI
 
 ## Setup
 
