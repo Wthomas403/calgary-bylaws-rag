@@ -126,8 +126,3 @@ push. It needs an `ANTHROPIC_API_KEY` secret set on the GitHub repo
 (Settings -> Secrets and variables -> Actions) for the faithfulness
 judge to work.
 
-## Tests
-
-```bash
-pytest
-```
